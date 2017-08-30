@@ -17,7 +17,7 @@ public class ConsoleView : MonoBehaviour {
 
     public void ApplyText(Text _text)
     {
-        scrollText.text += _text.text + "\n";
-        Debug.Log(_text.text);
+        scrollText.text += Console.instance.ExecuteCommandByLines(_text.text.ToLower()) + "\n";
+        //Debug.Log(_text.text);
     }
 }

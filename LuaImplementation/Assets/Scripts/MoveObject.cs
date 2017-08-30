@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using MoonSharp.Interpreter;
 
-public class MoveObject : MonoBehaviour 
+public class MoveObject : MonoBehaviour
 {
-    public struct luaAction{        
+    public struct luaAction
+    {
 
         public float speed;
 
@@ -21,32 +22,133 @@ public class MoveObject : MonoBehaviour
     Vector3 originalPosForActions;
     Queue<luaAction> actions;
 
-	Script script = new Script();
-    
-	void Start ()
-	{
+    Script script = new Script();
+
+    Console.CommandOnConsole MoveXDelegate;
+    Console.CommandOnConsole MoveYDelegate;
+    Console.CommandOnConsole MoveZDelegate;
+    Console.CommandOnConsole ChangeColorDelegate;
+
+    void Start()
+    {
         actions = new Queue<luaAction>();
         rend = GetComponent<Renderer>();
-
-        string scriptCode = @"
-
-			function start ()
-				sphere.MoveX(5,2)
-				sphere.MoveY(3,2)
-                sphere.ChangeColor(1)
-				sphere.MoveY(-3,3)
-				sphere.MoveX(-5,3)
-                sphere.ChangeColor(0)
-			end";
-		
-		UserData.RegisterType<MoveObject>();		
-		DynValue shpere = UserData.Create(this);
-		script.Globals.Set("sphere", shpere);
-		script.DoString(scriptCode);
-        script.Call(script.Globals["start"]);
-
+        
         setOriginalPosForActions();
-	}
+
+        MoveXDelegate = MoveXConsoleCmd;
+        MoveYDelegate = MoveYConsoleCmd;
+        MoveZDelegate = MoveZConsoleCmd;
+        ChangeColorDelegate = ChangeColorConsoleCmd;
+
+        Console.instance.AddCommand(("MoveX" + gameObject.name).ToLower(), MoveXDelegate);
+        Console.instance.AddCommand(("MoveY" + gameObject.name).ToLower(), MoveYDelegate);
+        Console.instance.AddCommand(("MoveZ" + gameObject.name).ToLower(),  MoveZDelegate);
+        Console.instance.AddCommand(("ChangeColor" + gameObject.name).ToLower(), ChangeColorDelegate);
+    }
+
+    public string MoveXConsoleCmd(string[] arg)
+    {
+        string log = "";
+
+        if (arg.Length == 2)
+        {
+            int x = 0;
+            int speed = 0;
+
+            x = System.Convert.ToInt32(arg[0]);
+            speed = System.Convert.ToInt32(arg[1]);
+
+            luaAction action = new luaAction();
+            action.moveOnX = x;
+            action.speed = speed;
+            action.movement = true;
+            actions.Enqueue(action);
+            log += "El objeto "+gameObject.name+" se moverá "+x+" en X, a "+ speed +" de velocidad...";
+        }
+        else
+        {
+            log += "Error de parámetros. Parámetros válidos: 'cantidad' 'velocidad'...";
+        }
+
+        return log;
+    }
+    public string MoveYConsoleCmd(string[] arg)
+    {
+        string log = "";
+        if (arg.Length == 2)
+        {
+            int y = 0;
+            int speed = 0;
+
+            y = System.Convert.ToInt32(arg[0]);
+            speed = System.Convert.ToInt32(arg[1]);
+
+            luaAction action = new luaAction();
+            action.moveOnY = y;
+            action.speed = speed;
+            action.movement = true;
+            actions.Enqueue(action);
+            log += "El objeto " + gameObject.name + " se moverá " + y + " en X, a " + speed + " de velocidad...";
+        }
+        else
+        {
+            log += "Error de parámetros. Parámetros válidos: 'cantidad' 'velocidad'...";
+        }
+
+
+        return log;
+    }
+    public string MoveZConsoleCmd(string[] arg)
+    {
+        string log = "";
+        if (arg.Length == 2)
+        {
+            int z = 0;
+            int speed = 0;
+
+            z = System.Convert.ToInt32(arg[0]);
+            speed = System.Convert.ToInt32(arg[1]);
+
+            luaAction action = new luaAction();
+            action.moveOnZ = z;
+            action.speed = speed;
+            action.movement = true;
+
+            actions.Enqueue(action);
+            log += "El objeto " + gameObject.name + " se moverá " + z + " en X, a " + speed + " de velocidad...";
+
+        }
+        else
+        {
+            log += "Error de parámetros. Parámetros válidos: 'cantidad' 'velocidad'...";
+        }
+        return log;
+    }
+
+    public string ChangeColorConsoleCmd(string[] arg)
+    {
+        string log = "";
+        int index = -1;
+        if (arg != null)
+            index = System.Convert.ToInt32(arg[0]);
+
+        if(index > 0 && index < 3)
+        {
+            luaAction action = new luaAction();
+            action.movement = false;
+            action.color = index;
+            actions.Enqueue(action);
+
+            log += "Color cambiado...";
+        }
+        else
+        {
+            log += "Error índice de color. Índice válido: 1 (para rojo), 2 (para blanco)..."; 
+        }
+
+        return log;
+    }
 
     public void MoveX(float x, float speed)
     {
@@ -88,7 +190,7 @@ public class MoveObject : MonoBehaviour
     {
         luaAction action = new luaAction();
         action.movement = false;
-        action.color = index;        
+        action.color = index;
 
         actions.Enqueue(action);
     }
@@ -98,9 +200,10 @@ public class MoveObject : MonoBehaviour
         originalPosForActions = transform.position;
     }
 
-	void Update () {
-        
-        if(actions.Count > 0)
+    void Update()
+    {
+
+        if (actions.Count > 0)
         {
             if (actions.Peek().movement)
             {
@@ -128,11 +231,10 @@ public class MoveObject : MonoBehaviour
                         rend.material.color = Color.red;
                         break;
                     default:
-                        rend.material.color = Color.white;
                         break;
                 }
                 actions.Dequeue();
             }
-        }        			
-	}
+        }
+    }
 }
